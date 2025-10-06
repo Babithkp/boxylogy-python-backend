@@ -1,7 +1,36 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, make_response
 from py3dbp import Packer, Bin, Item
-
+import sys
 app = Flask(__name__)
+
+ALLOWED_ORIGINS = {"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000", "https://boxlogic-backend.coolify.trikonatech.com"}
+
+def add_cors(response):
+    origin = request.headers.get("Origin")
+    print(f"[DEBUG] add_cors: Origin = {origin}", file=sys.stdout)
+    if origin and origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        # debug-only fallback (not for production)
+        response.headers["Access-Control-Allow-Origin"] = ["http://localhost:5173", "https://boxlogic-backend.coolify.trikonatech.com"]
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Credentials"] = "false"
+    return response
+
+@app.before_request
+def log_request():
+    print(f"\n[DEBUG] {request.method} {request.path} Origin: {request.headers.get('Origin')}", file=sys.stdout)
+    # print select headers
+    for k, v in request.headers.items():
+        if k.lower() in ("origin", "access-control-request-method", "access-control-request-headers", "content-type"):
+            print(f"  {k}: {v}", file=sys.stdout)
+     
+# handle preflight OPTIONS for /plan
+@app.route('/plan', methods=['OPTIONS'])
+def plan_options():
+    resp = make_response("", 204)
+    return add_cors(resp)       
 
 @app.route('/')
 def home():
