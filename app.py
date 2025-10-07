@@ -34,7 +34,7 @@ def plan_options():
 
 @app.route('/')
 def home():
-    return "Hello from boxlogic"
+    return "Hello from boxlogic from Trikona"
 
 @app.route('/plan', methods=['POST'])
 def plan():
